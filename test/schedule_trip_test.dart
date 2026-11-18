@@ -67,6 +67,59 @@ void main() {
     expect(find.text('Save this trip?'), findsNothing);
   });
 
+  testWidgets('edit back button sits in header and exits without a prompt', (
+    tester,
+  ) async {
+    final tripDate = DateTime.now().add(const Duration(days: 2));
+    final scheduledTrip = ScheduledTrip(
+      id: ScheduledTripStore.createId(),
+      destination: 'ILOMOCA',
+      location: 'Casa de Emperador, Mandurriao',
+      dateTime: DateTime(tripDate.year, tripDate.month, tripDate.day, 13),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder:
+              (context) => Scaffold(
+                body: Center(
+                  child: ElevatedButton(
+                    onPressed:
+                        () => Navigator.of(context).push<void>(
+                          MaterialPageRoute<void>(
+                            builder:
+                                (_) => ScheduleTripScreen(
+                                  destination: scheduledTrip.destination,
+                                  location: scheduledTrip.location,
+                                  existingTrip: scheduledTrip,
+                                ),
+                          ),
+                        ),
+                    child: const Text('Open edit'),
+                  ),
+                ),
+              ),
+        ),
+      ),
+    );
+
+    await tester.tap(find.text('Open edit'));
+    await tester.pumpAndSettle();
+    final backButton = find.byTooltip('Back to Planner');
+    final headerTitle = find.text('Edit Schedule Trip');
+    expect(
+      tester.getCenter(backButton).dy,
+      closeTo(tester.getCenter(headerTitle).dy, 1),
+    );
+
+    await tester.tap(backButton);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Open edit'), findsOneWidget);
+    expect(find.text('Save this trip?'), findsNothing);
+  });
+
   testWidgets('same place can be scheduled repeatedly', (tester) async {
     final returnedTrips = <ScheduledTrip>[];
     await tester.pumpWidget(
@@ -243,6 +296,37 @@ void main() {
     expect(find.text('Trip reminder'), findsOneWidget);
     expect(find.textContaining('Your visit to ILOMOCA'), findsOneWidget);
     expect(find.text('Casa de Emperador, Mandurriao'), findsOneWidget);
+  });
+
+  testWidgets('edit schedule summary shows details without an image', (
+    tester,
+  ) async {
+    final tripDate = DateTime.now().add(const Duration(days: 2));
+    final scheduledTrip = ScheduledTrip(
+      id: ScheduledTripStore.createId(),
+      destination: 'ILOMOCA',
+      location: 'Casa de Emperador, Festive Walk Parade, Mandurriao',
+      dateTime: DateTime(tripDate.year, tripDate.month, tripDate.day, 13),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        theme: ThemeData(platform: TargetPlatform.windows),
+        home: ScheduleTripScreen(
+          destination: scheduledTrip.destination,
+          location: scheduledTrip.location,
+          existingTrip: scheduledTrip,
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('ILOMOCA'), findsOneWidget);
+    expect(find.text(scheduledTrip.location), findsOneWidget);
+    expect(find.byType(Image), findsNothing);
+    expect(find.byType(SingleChildScrollView), findsOneWidget);
+    expect(find.byType(Scrollbar), findsNothing);
+    expect(tester.takeException(), isNull);
   });
 
   testWidgets('cannot save an edit for a time that has already passed', (

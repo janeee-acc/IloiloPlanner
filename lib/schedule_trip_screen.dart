@@ -8,14 +8,12 @@ class ScheduleTripScreen extends StatefulWidget {
     required this.destination,
     required this.location,
     this.existingTrip,
-    this.imageAsset,
     this.asDialog = false,
   });
 
   final String destination;
   final String location;
   final ScheduledTrip? existingTrip;
-  final String? imageAsset;
   final bool asDialog;
 
   @override
@@ -25,13 +23,6 @@ class ScheduleTripScreen extends StatefulWidget {
 class _ScheduleTripScreenState extends State<ScheduleTripScreen> {
   static const _green = Color(0xFF406735);
   static const _navColor = Color(0xFF81869D);
-  static const _imageAssetsByDestination = {
-    'ILOMOCA': 'assets/images/search-ilomoca.jpg',
-    'The Granary': 'assets/images/search-granary.jpg',
-    'Iloilo River Esplanade': 'assets/images/search-esplanade.jpg',
-    'Festive Walk Mall': 'assets/images/search-festive.jpg',
-  };
-
   late DateTime _selectedDate;
   late DateTime _visibleMonth;
   TimeOfDay _selectedTime = const TimeOfDay(hour: 13, minute: 0);
@@ -70,50 +61,6 @@ class _ScheduleTripScreenState extends State<ScheduleTripScreen> {
     if (time != null && mounted) {
       setState(() => _selectedTime = time);
     }
-  }
-
-  Future<void> _confirmSave() async {
-    if (_isSaving) return;
-
-    final shouldSave = await showDialog<bool>(
-      context: context,
-      builder:
-          (dialogContext) => AlertDialog(
-            backgroundColor: Colors.white,
-            surfaceTintColor: Colors.transparent,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-              side: const BorderSide(color: Color(0xFFC6D5C4)),
-            ),
-            title: const Text(
-              'Save this trip?',
-              style: TextStyle(color: _green, fontWeight: FontWeight.bold),
-            ),
-            content: const Text(
-              'Save your selected date and time?',
-              style: TextStyle(color: Color(0xFF404040)),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(dialogContext).pop(false),
-                child: const Text('Cancel'),
-              ),
-              ElevatedButton(
-                onPressed: () => Navigator.of(dialogContext).pop(true),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF55995C),
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                ),
-                child: Text(
-                  widget.existingTrip == null ? 'Save' : 'Save Changes',
-                ),
-              ),
-            ],
-          ),
-    );
-
-    if (shouldSave == true) await _save();
   }
 
   Future<void> _save() async {
@@ -245,12 +192,13 @@ class _ScheduleTripScreenState extends State<ScheduleTripScreen> {
           children: [
             IconButton(
               tooltip: 'Back to Planner',
-              onPressed: _confirmSave,
+              onPressed: () => Navigator.of(context).pop(),
               icon: const Icon(Icons.arrow_back, color: _green),
             ),
             const Expanded(
               child: Text(
                 'Edit Schedule Trip',
+                textAlign: TextAlign.center,
                 style: TextStyle(
                   color: _green,
                   fontSize: 17,
@@ -455,8 +403,7 @@ class _ScheduleTripScreenState extends State<ScheduleTripScreen> {
   @override
   Widget build(BuildContext context) {
     final labels = MaterialLocalizations.of(context);
-    final imageAsset =
-        widget.imageAsset ?? _imageAssetsByDestination[widget.destination];
+    final currentTab = widget.existingTrip == null ? 1 : 2;
 
     final formContent = SingleChildScrollView(
       padding: const EdgeInsets.all(12),
@@ -532,71 +479,43 @@ class _ScheduleTripScreenState extends State<ScheduleTripScreen> {
               ] else ...[
                 const SizedBox(height: 10),
                 Container(
-                  height: 76,
+                  constraints: const BoxConstraints(minHeight: 76),
+                  padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
                     color: const Color(0xFFF6F6F6),
                     border: Border.all(color: const Color(0xFFE0E0E0)),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  clipBehavior: Clip.antiAlias,
-                  child: Row(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if (imageAsset != null)
-                        Image.asset(
-                          imageAsset,
-                          width: 100,
-                          height: 76,
-                          fit: BoxFit.cover,
-                          semanticLabel: widget.destination,
-                        )
-                      else
-                        Container(
-                          width: 100,
-                          height: 76,
-                          color: const Color(0xFFEAF3E6),
-                          child: const Icon(
-                            Icons.place_outlined,
+                      Text(
+                        widget.destination,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Icon(
+                            Icons.location_on_outlined,
+                            size: 14,
                             color: _green,
-                            size: 32,
                           ),
-                        ),
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.all(8),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                widget.destination,
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Icon(
-                                    Icons.location_on_outlined,
-                                    size: 14,
-                                    color: _green,
-                                  ),
-                                  const SizedBox(width: 3),
-                                  Expanded(
-                                    child: Text(
-                                      widget.location,
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(fontSize: 10),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
+                          const SizedBox(width: 3),
+                          Expanded(
+                            child: Text(
+                              widget.location,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(fontSize: 10),
+                            ),
                           ),
-                        ),
+                        ],
                       ),
                     ],
                   ),
@@ -648,6 +567,10 @@ class _ScheduleTripScreenState extends State<ScheduleTripScreen> {
       ),
     );
     final form = widget.asDialog ? formContent : Center(child: formContent);
+    final editForm = ScrollConfiguration(
+      behavior: ScrollConfiguration.of(context).copyWith(scrollbars: false),
+      child: form,
+    );
 
     if (widget.asDialog) {
       return Dialog(
@@ -671,16 +594,25 @@ class _ScheduleTripScreenState extends State<ScheduleTripScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF4F4F4),
       body: SafeArea(
-        child: Column(children: [_buildHeader(), Expanded(child: form)]),
+        child: Column(
+          children: [
+            _buildHeader(),
+            Expanded(child: widget.existingTrip != null ? editForm : form),
+          ],
+        ),
       ),
       bottomNavigationBar: Container(
         decoration: const BoxDecoration(
           border: Border(top: BorderSide(color: Color(0xFFB8BAC7))),
         ),
         child: BottomNavigationBar(
-          currentIndex: 1,
+          currentIndex: currentTab,
           onTap: (index) {
-            if (index != 1) Navigator.of(context).pop(index);
+            if (index != currentTab) {
+              Navigator.of(context).pop(index);
+            } else if (widget.existingTrip != null) {
+              Navigator.of(context).pop();
+            }
           },
           type: BottomNavigationBarType.fixed,
           backgroundColor: Colors.white,

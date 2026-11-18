@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:iloilo_planner/home_screen.dart';
 import 'package:iloilo_planner/planner_screen.dart';
+import 'package:iloilo_planner/schedule_trip_screen.dart';
 import 'package:iloilo_planner/scheduled_trip.dart';
+import 'package:iloilo_planner/search_screen.dart';
 import 'package:shared_preferences_platform_interface/in_memory_shared_preferences_async.dart';
 import 'package:shared_preferences_platform_interface/shared_preferences_async_platform_interface.dart';
 import 'package:shared_preferences_platform_interface/types.dart';
@@ -172,5 +175,28 @@ void main() {
     final trips = await ScheduledTripStore.load();
     expect(trips, hasLength(1));
     expect(trips.single.id, scheduledTrip.id);
+  });
+
+  testWidgets('edit screen navigation opens the selected tab', (tester) async {
+    await ScheduledTripStore.add(trip());
+    await tester.pumpWidget(const MaterialApp(home: HomeScreen()));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.byIcon(Icons.calendar_month_outlined).first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byIcon(Icons.edit_note).first);
+    await tester.pumpAndSettle();
+    expect(find.byType(ScheduleTripScreen), findsOneWidget);
+
+    await tester.tap(find.byIcon(Icons.calendar_month_outlined).last);
+    await tester.pumpAndSettle();
+    expect(find.byType(ScheduleTripScreen), findsNothing);
+    expect(find.byType(PlannerScreen), findsOneWidget);
+
+    await tester.tap(find.byIcon(Icons.edit_note).first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byIcon(Icons.travel_explore).last);
+    await tester.pumpAndSettle();
+    expect(find.byType(SearchScreen), findsOneWidget);
   });
 }

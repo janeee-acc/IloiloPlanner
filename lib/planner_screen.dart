@@ -149,10 +149,10 @@ class _PlannerScreenState extends State<PlannerScreen> {
 
   Widget _buildTripHeading() {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
+      padding: const EdgeInsets.fromLTRB(16, 26, 16, 8),
       child: Row(
         children: [
-          const Icon(Icons.calendar_month, color: _green, size: 23),
+          const Icon(Icons.calendar_month_outlined, color: _green, size: 24),
           const SizedBox(width: 8),
           const Expanded(
             child: Column(
@@ -160,12 +160,16 @@ class _PlannerScreenState extends State<PlannerScreen> {
               children: [
                 Text(
                   'Your Upcoming Trips',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                    color: _green,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 SizedBox(height: 2),
                 Text(
                   'Manage your scheduled visits.',
-                  style: TextStyle(fontSize: 10, color: _muted),
+                  style: TextStyle(fontSize: 12, color: _muted),
                 ),
               ],
             ),

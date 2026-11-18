@@ -87,7 +87,6 @@ class _SearchScreenState extends State<SearchScreen> {
           (context) => ScheduleTripScreen(
             destination: place.name,
             location: place.location,
-            imageAsset: place.imageAsset,
             asDialog: true,
           ),
     );
