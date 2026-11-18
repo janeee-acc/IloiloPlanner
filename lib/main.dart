@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'home_screen.dart';
+import 'splash_screen.dart';
 import 'planner_screen.dart';
 import 'profile_screen.dart';
 import 'search_screen.dart';
@@ -31,7 +31,7 @@ class MyApp extends StatelessWidget {
             break;
           case '/':
           default:
-            screen = const HomeScreen();
+            screen = const SplashScreen();
             break;
         }
 
