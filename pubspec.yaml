@@ -1,0 +1,33 @@
+name: iloilo_planner
+description: "A new Flutter project."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.7.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  shared_preferences: ^2.5.3
+  cryptography: ^2.9.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+  shared_preferences_platform_interface: ^2.4.1
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/logo.png
+    - assets/images/iloilo_planner_text.png
+    - assets/images/planner.png
+    - assets/images/search-icon.png
+    - assets/images/search.png
+    - assets/images/search-esplanade.jpg
+    - assets/images/search-festive.jpg
+    - assets/images/search-granary.jpg
+    - assets/images/search-ilomoca.jpg
