@@ -25,7 +25,6 @@ class _SearchScreenState extends State<SearchScreen> {
   List<_Place> _results = [];
   bool _hasSearched = false;
   String _emptyResultsMessage = 'No places found in Mandurriao.';
-  DateTime? _lastScheduledTripDate;
 
   static const _places = <_Place>[
     _Place(
@@ -80,7 +79,7 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   Future<void> _scheduleTrip(_Place place) async {
-    final result = await showDialog<ScheduledTrip>(
+    await showDialog<ScheduledTrip>(
       context: context,
       barrierDismissible: false,
       builder:
@@ -90,9 +89,6 @@ class _SearchScreenState extends State<SearchScreen> {
             asDialog: true,
           ),
     );
-
-    if (!mounted || result == null) return;
-    setState(() => _lastScheduledTripDate = result.dateTime);
   }
 
   Future<void> _openFilters() async {
@@ -669,14 +665,9 @@ class _SearchScreenState extends State<SearchScreen> {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: 1,
         onTap: (index) {
-          if (index != 1) {
-            Navigator.of(context).pop(
-              SearchNavigationResult(
-                selectedTab: index,
-                focusDate: _lastScheduledTripDate,
-              ),
-            );
-          }
+          if (index == 1) return;
+          const routes = ['/', '/search', '/planner', '/profile'];
+          Navigator.of(context).pushReplacementNamed(routes[index]);
         },
         type: BottomNavigationBarType.fixed,
         backgroundColor: Colors.white,

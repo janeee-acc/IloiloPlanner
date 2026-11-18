@@ -27,9 +27,12 @@ class _PlannerScreenState extends State<PlannerScreen> {
   Future<void> _loadTrips() async {
     try {
       final trips = await ScheduledTripStore.load();
+      final now = DateTime.now();
+      final upcomingTrips =
+          trips.where((trip) => !trip.dateTime.isBefore(now)).toList();
       if (!mounted) return;
       setState(() {
-        _trips = trips;
+        _trips = upcomingTrips;
         _isLoading = false;
       });
     } catch (error) {
@@ -359,7 +362,7 @@ class _PlannerScreenState extends State<PlannerScreen> {
 
   Widget _buildPlanTripButton() {
     return ElevatedButton.icon(
-      onPressed: () => Navigator.of(context).pop(1),
+      onPressed: () => Navigator.of(context).pushReplacementNamed('/search'),
       icon: const Icon(Icons.add, size: 18),
       label: const Text(
         'Plan Trip',
@@ -478,7 +481,9 @@ class _PlannerScreenState extends State<PlannerScreen> {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: 2,
         onTap: (index) {
-          if (index != 2) Navigator.of(context).pop(index);
+          if (index == 2) return;
+          const routes = ['/', '/search', '/planner', '/profile'];
+          Navigator.of(context).pushReplacementNamed(routes[index]);
         },
         type: BottomNavigationBarType.fixed,
         backgroundColor: Colors.white,

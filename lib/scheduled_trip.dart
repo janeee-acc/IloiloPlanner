@@ -48,6 +48,7 @@ class SearchNavigationResult {
 
 class ScheduledTripStore {
   static const _storageKey = 'iloilo.scheduledTrips.v1';
+  static const _readNotificationsKey = 'iloilo.readNotifications.v1';
   static final _storage = SharedPreferencesAsync();
   static var _lastIdTimestamp = 0;
 
@@ -83,6 +84,19 @@ class ScheduledTripStore {
     return normalized;
   }
 
+  static Future<Set<String>> loadReadNotificationIds() async {
+    final ids = await _storage.getStringList(_readNotificationsKey);
+    return ids?.toSet() ?? <String>{};
+  }
+
+  static Future<void> markNotificationsRead(
+    Iterable<ScheduledTrip> trips,
+  ) async {
+    final readIds = await loadReadNotificationIds();
+    readIds.addAll(trips.map((trip) => trip.id));
+    await _storage.setStringList(_readNotificationsKey, readIds.toList());
+  }
+
   static Future<void> add(ScheduledTrip trip) async {
     final trips = await load();
     trips.add(
@@ -111,6 +125,7 @@ class ScheduledTripStore {
       createdAt: updatedTrip.createdAt ?? trips[index].createdAt,
     );
     await _save(trips);
+    await _clearReadNotificationId(updatedTrip.id);
   }
 
   static Future<void> remove(String tripId) async {
@@ -120,6 +135,13 @@ class ScheduledTripStore {
       throw StateError('The scheduled trip no longer exists.');
     }
     await _save(remaining);
+    await _clearReadNotificationId(tripId);
+  }
+
+  static Future<void> _clearReadNotificationId(String tripId) async {
+    final readIds = await loadReadNotificationIds();
+    if (!readIds.remove(tripId)) return;
+    await _storage.setStringList(_readNotificationsKey, readIds.toList());
   }
 
   static Future<void> _save(List<ScheduledTrip> trips) async {

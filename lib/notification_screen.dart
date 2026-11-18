@@ -304,7 +304,10 @@ class NotificationScreen extends StatelessWidget {
         ),
         child: BottomNavigationBar(
           currentIndex: 2,
-          onTap: (index) => Navigator.of(context).pop(index),
+          onTap: (index) {
+            const routes = ['/', '/search', '/planner', '/profile'];
+            Navigator.of(context).pushReplacementNamed(routes[index]);
+          },
           type: BottomNavigationBarType.fixed,
           backgroundColor: Colors.white,
           elevation: 0,

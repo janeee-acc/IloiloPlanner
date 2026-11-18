@@ -25,6 +25,7 @@ flutter:
     - assets/images/logo.png
     - assets/images/iloilo_planner_text.png
     - assets/images/planner.png
+    - assets/images/profile.png
     - assets/images/search-icon.png
     - assets/images/search.png
     - assets/images/search-esplanade.jpg

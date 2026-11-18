@@ -608,11 +608,9 @@ class _ScheduleTripScreenState extends State<ScheduleTripScreen> {
         child: BottomNavigationBar(
           currentIndex: currentTab,
           onTap: (index) {
-            if (index != currentTab) {
-              Navigator.of(context).pop(index);
-            } else if (widget.existingTrip != null) {
-              Navigator.of(context).pop();
-            }
+            if (index == currentTab) return;
+            const routes = ['/', '/search', '/planner', '/profile'];
+            Navigator.of(context).pushReplacementNamed(routes[index]);
           },
           type: BottomNavigationBarType.fixed,
           backgroundColor: Colors.white,

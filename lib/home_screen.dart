@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import 'notification_screen.dart';
-import 'planner_screen.dart';
 import 'search_screen.dart';
 import 'scheduled_trip.dart';
 
@@ -20,6 +19,7 @@ class _HomeScreenState extends State<HomeScreen> {
   late DateTime _selectedDate;
   late DateTime _visibleMonth;
   List<ScheduledTrip> _scheduledTrips = [];
+  int _notificationCount = 0;
 
   @override
   void initState() {
@@ -32,9 +32,19 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _loadScheduledTrips({DateTime? focusDate}) async {
     try {
       final trips = await ScheduledTripStore.load();
+      final readIds = await ScheduledTripStore.loadReadNotificationIds();
+      final now = DateTime.now();
       if (!mounted) return;
       setState(() {
         _scheduledTrips = trips;
+        _notificationCount =
+            trips
+                .where(
+                  (trip) =>
+                      !trip.dateTime.isBefore(now) &&
+                      !readIds.contains(trip.id),
+                )
+                .length;
         if (focusDate != null) {
           _selectedDate = DateUtils.dateOnly(focusDate);
           _visibleMonth = DateTime(focusDate.year, focusDate.month);
@@ -65,19 +75,24 @@ class _HomeScreenState extends State<HomeScreen> {
     late final List<TripReminder> reminders;
     try {
       final trips = await ScheduledTripStore.load();
+      final readIds = await ScheduledTripStore.loadReadNotificationIds();
       final now = DateTime.now();
+      final upcomingTrips =
+          trips.where((trip) => !trip.dateTime.isBefore(now)).toList();
       reminders =
-          trips
-              .where((trip) => !trip.dateTime.isBefore(now))
+          upcomingTrips
               .map(
                 (trip) => TripReminder(
                   destination: trip.destination,
                   location: trip.location,
                   tripDate: trip.dateTime,
                   createdAt: trip.createdAt ?? trip.dateTime,
+                  isUnread: !readIds.contains(trip.id),
                 ),
               )
               .toList();
+      await ScheduledTripStore.markNotificationsRead(upcomingTrips);
+      if (mounted) setState(() => _notificationCount = 0);
     } catch (error) {
       if (mounted) _showMessage('Could not load trip reminders: $error');
       return;
@@ -114,34 +129,19 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future<void> _openPlanner() async {
-    final selectedTab = await Navigator.of(context).push<int>(
-      MaterialPageRoute<int>(builder: (context) => const PlannerScreen()),
-    );
-    if (!mounted) return;
-    await _loadScheduledTrips();
-    if (selectedTab != null && selectedTab != 2) {
-      _onNavigationTap(selectedTab);
-    }
-  }
-
   void _onNavigationTap(int index) {
     switch (index) {
       case 0:
-        final today = DateUtils.dateOnly(DateTime.now());
-        setState(() {
-          _selectedDate = today;
-          _visibleMonth = DateTime(today.year, today.month);
-        });
+        Navigator.of(context).pushReplacementNamed('/');
         break;
       case 1:
-        _openSearch();
+        Navigator.of(context).pushReplacementNamed('/search');
         break;
       case 2:
-        _openPlanner();
+        Navigator.of(context).pushReplacementNamed('/planner');
         break;
       case 3:
-        _showMessage('Profile will open here.');
+        Navigator.of(context).pushReplacementNamed('/profile');
         break;
     }
   }
@@ -182,14 +182,51 @@ class _HomeScreenState extends State<HomeScreen> {
           IconButton(
             tooltip: 'Notifications',
             onPressed: _openNotifications,
-            icon: Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: green, width: 1.4),
-              ),
-              child: const Icon(Icons.notifications, color: green, size: 20),
+            icon: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: green, width: 1.4),
+                  ),
+                  child: const Icon(
+                    Icons.notifications,
+                    color: green,
+                    size: 20,
+                  ),
+                ),
+                if (_notificationCount > 0)
+                  Positioned(
+                    top: -4,
+                    right: -4,
+                    child: Container(
+                      constraints: const BoxConstraints(
+                        minWidth: 18,
+                        minHeight: 18,
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      alignment: Alignment.center,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFD32F2F),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Text(
+                        _notificationCount > 99
+                            ? '99+'
+                            : '$_notificationCount',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          height: 1.2,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ),
         ],
