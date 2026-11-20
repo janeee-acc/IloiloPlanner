@@ -32,9 +32,7 @@ class _SplashScreenState extends State<SplashScreen>
     if (!mounted) return;
 
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute<void>(
-        builder: (context) => const WelcomeScreen(),
-      ),
+      MaterialPageRoute<void>(builder: (context) => const WelcomeScreen()),
     );
   }
 
@@ -125,11 +123,7 @@ class _LoadingDot extends StatelessWidget {
           colors: [topColor, bottomColor],
         ),
         boxShadow: const [
-          BoxShadow(
-            color: Colors.black26,
-            blurRadius: 3,
-            offset: Offset(0, 2),
-          ),
+          BoxShadow(color: Colors.black26, blurRadius: 3, offset: Offset(0, 2)),
         ],
       ),
     );

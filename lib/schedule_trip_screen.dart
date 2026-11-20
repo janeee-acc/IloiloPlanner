@@ -57,6 +57,37 @@ class _ScheduleTripScreenState extends State<ScheduleTripScreen> {
     final time = await showTimePicker(
       context: context,
       initialTime: _selectedTime,
+      builder: (context, child) {
+        final theme = Theme.of(context);
+        final colorScheme = theme.colorScheme.copyWith(
+          primary: _green,
+          onPrimary: Colors.white,
+          primaryContainer: const Color(0xFFEAF3E6),
+          onPrimaryContainer: _green,
+          secondary: _green,
+          onSecondary: Colors.white,
+          secondaryContainer: const Color(0xFFEAF3E6),
+          onSecondaryContainer: _green,
+        );
+
+        return Theme(
+          data: theme.copyWith(
+            colorScheme: colorScheme,
+            timePickerTheme: const TimePickerThemeData(
+              backgroundColor: Colors.white,
+              dialBackgroundColor: Color(0xFFF3F6F2),
+              dialHandColor: _green,
+              dialTextColor: Color(0xFF404040),
+              hourMinuteColor: Color(0xFFEAF3E6),
+              hourMinuteTextColor: _green,
+              dayPeriodColor: Color(0xFFEAF3E6),
+              dayPeriodTextColor: _green,
+              entryModeIconColor: _green,
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
     if (time != null && mounted) {
       setState(() => _selectedTime = time);
@@ -242,6 +273,53 @@ class _ScheduleTripScreenState extends State<ScheduleTripScreen> {
               onPressed: () => Navigator.of(context).pop(),
               icon: const Icon(Icons.arrow_back, color: _green),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEditDestinationCard() {
+    return Container(
+      constraints: const BoxConstraints(minHeight: 76),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(color: const Color(0xFFE0E0E0)),
+        borderRadius: BorderRadius.circular(8),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x18000000),
+            blurRadius: 4,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            widget.destination,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 6),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Icon(Icons.location_on_outlined, size: 16, color: _green),
+              const SizedBox(width: 5),
+              Expanded(
+                child: Text(
+                  widget.location,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 12),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -477,49 +555,14 @@ class _ScheduleTripScreenState extends State<ScheduleTripScreen> {
                 ),
                 const SizedBox(height: 8),
               ] else ...[
-                const SizedBox(height: 10),
-                Container(
-                  constraints: const BoxConstraints(minHeight: 76),
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF6F6F6),
-                    border: Border.all(color: const Color(0xFFE0E0E0)),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        widget.destination,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Icon(
-                            Icons.location_on_outlined,
-                            size: 14,
-                            color: _green,
-                          ),
-                          const SizedBox(width: 3),
-                          Expanded(
-                            child: Text(
-                              widget.location,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(fontSize: 10),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+                const SizedBox(height: 6),
+                const Text(
+                  'Update your visit date and time.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 12, color: Color(0xFF686868)),
                 ),
+                const SizedBox(height: 12),
+                _buildEditDestinationCard(),
                 const SizedBox(height: 12),
               ],
               _buildCalendar(),
@@ -609,7 +652,7 @@ class _ScheduleTripScreenState extends State<ScheduleTripScreen> {
           currentIndex: currentTab,
           onTap: (index) {
             if (index == currentTab) return;
-            const routes = ['/', '/search', '/planner', '/profile'];
+            const routes = ['/home', '/search', '/planner', '/profile'];
             Navigator.of(context).pushReplacementNamed(routes[index]);
           },
           type: BottomNavigationBarType.fixed,

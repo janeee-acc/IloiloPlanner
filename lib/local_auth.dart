@@ -5,6 +5,18 @@ import 'package:cryptography/cryptography.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+class UserProfile {
+  const UserProfile({
+    required this.email,
+    required this.username,
+    this.bio = '',
+  });
+
+  final String email;
+  final String username;
+  final String bio;
+}
+
 class LocalAuth {
   static final _storage = SharedPreferencesAsync();
 
@@ -49,6 +61,7 @@ class LocalAuth {
     final account = {
       'email': normalizedEmail,
       'username': username.trim(),
+      'bio': '',
       'salt': base64Encode(salt),
       'passwordHash': base64Encode(hash),
     };
@@ -105,8 +118,56 @@ class LocalAuth {
     return false;
   }
 
-  // The future Profile logout button can call this.
+  // The Profile logout button calls this.
   static Future<void> logout() async {
     await _storage.remove(_sessionKey);
+  }
+
+  // Email of the signed-in account, or null when nobody is signed in.
+  // Per-account data (trips, visited places) is stored under this email.
+  static Future<String?> currentEmail() async {
+    final email = await _storage.getString(_sessionKey);
+    if (email == null || email.isEmpty) return null;
+    return email;
+  }
+
+  static Future<UserProfile?> currentProfile() async {
+    final email = await currentEmail();
+    if (email == null) return null;
+
+    final saved = await _storage.getString(_accountKey(email));
+    if (saved == null) return null;
+
+    final account = jsonDecode(saved) as Map<String, dynamic>;
+    return UserProfile(
+      email: account['email'] as String? ?? email,
+      username: account['username'] as String? ?? '',
+      bio: account['bio'] as String? ?? '',
+    );
+  }
+
+  // Only the username and bio can change. Email, salt and password hash
+  // are copied through untouched so the user can still log in.
+  static Future<UserProfile> updateProfile({
+    required String username,
+    required String bio,
+  }) async {
+    final email = await currentEmail();
+    if (email == null) throw StateError('No signed-in account.');
+
+    final key = _accountKey(email);
+    final saved = await _storage.getString(key);
+    if (saved == null) throw StateError('The account no longer exists.');
+
+    final account = jsonDecode(saved) as Map<String, dynamic>;
+    account['username'] = username.trim();
+    account['bio'] = bio.trim();
+    await _storage.setString(key, jsonEncode(account));
+
+    return UserProfile(
+      email: account['email'] as String? ?? email,
+      username: account['username'] as String,
+      bio: account['bio'] as String,
+    );
   }
 }

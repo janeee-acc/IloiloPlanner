@@ -2,6 +2,8 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'local_auth.dart';
+
 class ScheduledTrip {
   const ScheduledTrip({
     this.id = '',
@@ -39,6 +41,32 @@ class ScheduledTrip {
   }
 }
 
+class VisitedPlace {
+  const VisitedPlace({
+    required this.destination,
+    required this.location,
+    required this.visitedAt,
+  });
+
+  final String destination;
+  final String location;
+  final DateTime visitedAt;
+
+  Map<String, Object> toJson() => {
+    'destination': destination,
+    'location': location,
+    'visitedAt': visitedAt.toIso8601String(),
+  };
+
+  factory VisitedPlace.fromJson(Map<String, dynamic> json) {
+    return VisitedPlace(
+      destination: json['destination'] as String,
+      location: json['location'] as String,
+      visitedAt: DateTime.parse(json['visitedAt'] as String),
+    );
+  }
+}
+
 class SearchNavigationResult {
   const SearchNavigationResult({required this.selectedTab, this.focusDate});
 
@@ -47,10 +75,24 @@ class SearchNavigationResult {
 }
 
 class ScheduledTripStore {
-  static const _storageKey = 'iloilo.scheduledTrips.v1';
-  static const _readNotificationsKey = 'iloilo.readNotifications.v1';
+  // Trips used to be one shared list. They are now saved per account, so
+  // the old list is moved to the first account that opens it.
+  static const _legacyStorageKey = 'iloilo.scheduledTrips.v1';
   static final _storage = SharedPreferencesAsync();
   static var _lastIdTimestamp = 0;
+
+  // Every key ends with the signed-in email so accounts never share data.
+  static Future<String> _scope() async =>
+      await LocalAuth.currentEmail() ?? 'guest';
+
+  static Future<String> _storageKey() async =>
+      'iloilo.scheduledTrips.v2.${await _scope()}';
+
+  static Future<String> _readNotificationsKey() async =>
+      'iloilo.readNotifications.v2.${await _scope()}';
+
+  static Future<String> _visitedKey() async =>
+      'iloilo.visitedPlaces.v1.${await _scope()}';
 
   static String createId() {
     final now = DateTime.now().microsecondsSinceEpoch;
@@ -59,7 +101,16 @@ class ScheduledTripStore {
   }
 
   static Future<List<ScheduledTrip>> load() async {
-    final saved = await _storage.getString(_storageKey);
+    final key = await _storageKey();
+    var saved = await _storage.getString(key);
+    if (saved == null) {
+      final legacy = await _storage.getString(_legacyStorageKey);
+      if (legacy != null && legacy.isNotEmpty) {
+        await _storage.setString(key, legacy);
+        await _storage.remove(_legacyStorageKey);
+        saved = legacy;
+      }
+    }
     if (saved == null || saved.isEmpty) return [];
 
     final decoded = jsonDecode(saved) as List<dynamic>;
@@ -85,7 +136,7 @@ class ScheduledTripStore {
   }
 
   static Future<Set<String>> loadReadNotificationIds() async {
-    final ids = await _storage.getStringList(_readNotificationsKey);
+    final ids = await _storage.getStringList(await _readNotificationsKey());
     return ids?.toSet() ?? <String>{};
   }
 
@@ -94,7 +145,10 @@ class ScheduledTripStore {
   ) async {
     final readIds = await loadReadNotificationIds();
     readIds.addAll(trips.map((trip) => trip.id));
-    await _storage.setStringList(_readNotificationsKey, readIds.toList());
+    await _storage.setStringList(
+      await _readNotificationsKey(),
+      readIds.toList(),
+    );
   }
 
   static Future<void> add(ScheduledTrip trip) async {
@@ -141,14 +195,50 @@ class ScheduledTripStore {
   static Future<void> _clearReadNotificationId(String tripId) async {
     final readIds = await loadReadNotificationIds();
     if (!readIds.remove(tripId)) return;
-    await _storage.setStringList(_readNotificationsKey, readIds.toList());
+    await _storage.setStringList(
+      await _readNotificationsKey(),
+      readIds.toList(),
+    );
   }
 
   static Future<void> _save(List<ScheduledTrip> trips) async {
     trips.sort((a, b) => a.dateTime.compareTo(b.dateTime));
     await _storage.setString(
-      _storageKey,
+      await _storageKey(),
       jsonEncode(trips.map((item) => item.toJson()).toList()),
+    );
+  }
+
+  static Future<List<VisitedPlace>> loadVisited() async {
+    final saved = await _storage.getString(await _visitedKey());
+    if (saved == null || saved.isEmpty) return [];
+
+    final decoded = jsonDecode(saved) as List<dynamic>;
+    final places =
+        decoded
+            .map((item) => VisitedPlace.fromJson(item as Map<String, dynamic>))
+            .toList();
+    places.sort((a, b) => b.visitedAt.compareTo(a.visitedAt));
+    return places;
+  }
+
+  // Removes the trip from the planner and records the place as visited.
+  // A place that was visited before is kept once, with the newest date.
+  static Future<void> markVisited(ScheduledTrip trip) async {
+    await remove(trip.id);
+
+    final visited = await loadVisited();
+    visited.removeWhere((place) => place.destination == trip.destination);
+    visited.add(
+      VisitedPlace(
+        destination: trip.destination,
+        location: trip.location,
+        visitedAt: DateTime.now(),
+      ),
+    );
+    await _storage.setString(
+      await _visitedKey(),
+      jsonEncode(visited.map((item) => item.toJson()).toList()),
     );
   }
 }

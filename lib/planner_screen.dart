@@ -115,7 +115,7 @@ class _PlannerScreenState extends State<PlannerScreen> {
 
   Future<void> _markVisited(ScheduledTrip trip) async {
     try {
-      await ScheduledTripStore.remove(trip.id);
+      await ScheduledTripStore.markVisited(trip);
       await _loadTrips();
       if (mounted) _showMessage('${trip.destination} marked as visited.');
     } catch (error) {
@@ -482,7 +482,7 @@ class _PlannerScreenState extends State<PlannerScreen> {
         currentIndex: 2,
         onTap: (index) {
           if (index == 2) return;
-          const routes = ['/', '/search', '/planner', '/profile'];
+          const routes = ['/home', '/search', '/planner', '/profile'];
           Navigator.of(context).pushReplacementNamed(routes[index]);
         },
         type: BottomNavigationBarType.fixed,

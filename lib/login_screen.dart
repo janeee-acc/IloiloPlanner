@@ -41,10 +41,7 @@ class _LoginScreenState extends State<LoginScreen> {
       filled: true,
       fillColor: const Color(0xFFEDEDED),
       isDense: true,
-      contentPadding: const EdgeInsets.symmetric(
-        horizontal: 12,
-        vertical: 15,
-      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 15),
       border: border,
       enabledBorder: border,
       focusedBorder: border.copyWith(
@@ -86,10 +83,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     final String? username;
     try {
-      username = await LocalAuth.login(
-        email: email,
-        password: password,
-      );
+      username = await LocalAuth.login(email: email, password: password);
     } catch (error) {
       debugPrint('Local login failed: ${error.runtimeType}');
       if (!mounted) return;
@@ -109,9 +103,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     ScaffoldMessenger.of(context).removeCurrentSnackBar();
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute<void>(
-        builder: (context) => const HomeScreen(),
-      ),
+      MaterialPageRoute<void>(builder: (context) => const HomeScreen()),
     );
   }
 
@@ -213,21 +205,22 @@ class _LoginScreenState extends State<LoginScreen> {
                                         borderRadius: BorderRadius.circular(7),
                                       ),
                                     ),
-                                    child: _isLoggingIn
-                                        ? const SizedBox.square(
-                                            dimension: 16,
-                                            child: CircularProgressIndicator(
-                                              strokeWidth: 2,
-                                              semanticsLabel: 'Logging in',
+                                    child:
+                                        _isLoggingIn
+                                            ? const SizedBox.square(
+                                              dimension: 16,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                                semanticsLabel: 'Logging in',
+                                              ),
+                                            )
+                                            : const Text(
+                                              'Log in',
+                                              style: TextStyle(
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.bold,
+                                              ),
                                             ),
-                                          )
-                                        : const Text(
-                                            'Log in',
-                                            style: TextStyle(
-                                              fontSize: 13,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
                                   ),
                                 ),
                               ],

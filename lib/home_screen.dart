@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import 'notification_screen.dart';
@@ -11,7 +13,7 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   static const green = Color(0xFF406735);
   static const buttonGreen = Color(0xFF55965C);
   static const muted = Color(0xFF686868);
@@ -20,13 +22,65 @@ class _HomeScreenState extends State<HomeScreen> {
   late DateTime _visibleMonth;
   List<ScheduledTrip> _scheduledTrips = [];
   int _notificationCount = 0;
+  Timer? _reminderRefreshTimer;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _selectedDate = DateUtils.dateOnly(DateTime.now());
     _visibleMonth = DateTime(_selectedDate.year, _selectedDate.month);
+    _scheduleReminderRefresh();
     _loadScheduledTrips();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _reminderRefreshTimer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state != AppLifecycleState.resumed) return;
+    _scheduleReminderRefresh();
+    _loadScheduledTrips();
+  }
+
+  void _scheduleReminderRefresh() {
+    _reminderRefreshTimer?.cancel();
+    final now = DateTime.now();
+    final nextDay = DateTime(now.year, now.month, now.day + 1);
+    _reminderRefreshTimer = Timer(nextDay.difference(now), () {
+      if (!mounted) return;
+      _loadScheduledTrips();
+      _scheduleReminderRefresh();
+    });
+  }
+
+  List<ScheduledTrip> _tripsDueForReminder(
+    Iterable<ScheduledTrip> trips,
+    DateTime now,
+  ) {
+    final today = DateUtils.dateOnly(now);
+    final tomorrow = DateTime(today.year, today.month, today.day + 1);
+
+    return trips.where((trip) {
+      if (!trip.dateTime.isAfter(now)) return false;
+      final tripDay = DateUtils.dateOnly(trip.dateTime);
+      if (DateUtils.isSameDay(tripDay, tomorrow)) return true;
+
+      final createdAt = trip.createdAt;
+      return DateUtils.isSameDay(tripDay, today) &&
+          createdAt != null &&
+          DateUtils.dateOnly(createdAt).isBefore(tripDay);
+    }).toList();
+  }
+
+  DateTime _reminderCreatedAt(ScheduledTrip trip) {
+    final tripDay = DateUtils.dateOnly(trip.dateTime);
+    return DateTime(tripDay.year, tripDay.month, tripDay.day - 1);
   }
 
   Future<void> _loadScheduledTrips({DateTime? focusDate}) async {
@@ -34,17 +88,12 @@ class _HomeScreenState extends State<HomeScreen> {
       final trips = await ScheduledTripStore.load();
       final readIds = await ScheduledTripStore.loadReadNotificationIds();
       final now = DateTime.now();
+      final dueTrips = _tripsDueForReminder(trips, now);
       if (!mounted) return;
       setState(() {
         _scheduledTrips = trips;
         _notificationCount =
-            trips
-                .where(
-                  (trip) =>
-                      !trip.dateTime.isBefore(now) &&
-                      !readIds.contains(trip.id),
-                )
-                .length;
+            dueTrips.where((trip) => !readIds.contains(trip.id)).length;
         if (focusDate != null) {
           _selectedDate = DateUtils.dateOnly(focusDate);
           _visibleMonth = DateTime(focusDate.year, focusDate.month);
@@ -77,21 +126,20 @@ class _HomeScreenState extends State<HomeScreen> {
       final trips = await ScheduledTripStore.load();
       final readIds = await ScheduledTripStore.loadReadNotificationIds();
       final now = DateTime.now();
-      final upcomingTrips =
-          trips.where((trip) => !trip.dateTime.isBefore(now)).toList();
+      final dueTrips = _tripsDueForReminder(trips, now);
       reminders =
-          upcomingTrips
+          dueTrips
               .map(
                 (trip) => TripReminder(
                   destination: trip.destination,
                   location: trip.location,
                   tripDate: trip.dateTime,
-                  createdAt: trip.createdAt ?? trip.dateTime,
+                  createdAt: _reminderCreatedAt(trip),
                   isUnread: !readIds.contains(trip.id),
                 ),
               )
               .toList();
-      await ScheduledTripStore.markNotificationsRead(upcomingTrips);
+      await ScheduledTripStore.markNotificationsRead(dueTrips);
       if (mounted) setState(() => _notificationCount = 0);
     } catch (error) {
       if (mounted) _showMessage('Could not load trip reminders: $error');
@@ -132,7 +180,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void _onNavigationTap(int index) {
     switch (index) {
       case 0:
-        Navigator.of(context).pushReplacementNamed('/');
+        Navigator.of(context).pushReplacementNamed('/home');
         break;
       case 1:
         Navigator.of(context).pushReplacementNamed('/search');
@@ -214,9 +262,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         shape: BoxShape.circle,
                       ),
                       child: Text(
-                        _notificationCount > 99
-                            ? '99+'
-                            : '$_notificationCount',
+                        _notificationCount > 99 ? '99+' : '$_notificationCount',
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 10,

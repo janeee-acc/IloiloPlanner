@@ -19,10 +19,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   @override
   void initState() {
     super.initState();
-    _welcomeTimer = Timer(
-      const Duration(seconds: 2),
-      _openNextScreen,
-    );
+    _welcomeTimer = Timer(const Duration(seconds: 2), _openNextScreen);
   }
 
   Future<void> _openNextScreen() async {
@@ -40,8 +37,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
     Navigator.of(context).pushReplacement(
       MaterialPageRoute<void>(
-        builder: (context) =>
-            isLoggedIn ? const HomeScreen() : const LoginScreen(),
+        builder:
+            (context) => isLoggedIn ? const HomeScreen() : const LoginScreen(),
       ),
     );
   }

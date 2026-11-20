@@ -666,7 +666,7 @@ class _SearchScreenState extends State<SearchScreen> {
         currentIndex: 1,
         onTap: (index) {
           if (index == 1) return;
-          const routes = ['/', '/search', '/planner', '/profile'];
+          const routes = ['/home', '/search', '/planner', '/profile'];
           Navigator.of(context).pushReplacementNamed(routes[index]);
         },
         type: BottomNavigationBarType.fixed,

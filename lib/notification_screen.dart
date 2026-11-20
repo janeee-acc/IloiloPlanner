@@ -17,10 +17,7 @@ class TripReminder {
 }
 
 class NotificationScreen extends StatelessWidget {
-  const NotificationScreen({
-    super.key,
-    this.reminders = const [],
-  });
+  const NotificationScreen({super.key, this.reminders = const []});
 
   final List<TripReminder> reminders;
 
@@ -51,9 +48,15 @@ class NotificationScreen extends StatelessWidget {
   Widget _buildReminderCard(BuildContext context, TripReminder reminder) {
     final labels = MaterialLocalizations.of(context);
     final isToday = DateUtils.isSameDay(reminder.tripDate, DateTime.now());
-    final day = isToday
-        ? 'today'
-        : 'on ${labels.formatMediumDate(reminder.tripDate)}';
+    final now = DateTime.now();
+    final tomorrow = DateTime(now.year, now.month, now.day + 1);
+    final isTomorrow = DateUtils.isSameDay(reminder.tripDate, tomorrow);
+    final day =
+        isToday
+            ? 'today'
+            : isTomorrow
+            ? 'tomorrow'
+            : 'on ${labels.formatMediumDate(reminder.tripDate)}';
     final time = TimeOfDay.fromDateTime(reminder.tripDate).format(context);
 
     return Container(
@@ -97,11 +100,7 @@ class NotificationScreen extends StatelessWidget {
                     if (reminder.isUnread)
                       Semantics(
                         label: 'Unread',
-                        child: const Icon(
-                          Icons.circle,
-                          size: 8,
-                          color: _green,
-                        ),
+                        child: const Icon(Icons.circle, size: 8, color: _green),
                       ),
                   ],
                 ),
@@ -166,135 +165,133 @@ class NotificationScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: Colors.white,
-
-      // Full-width header on both desktop and mobile.
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.transparent,
-        foregroundColor: _green,
-        elevation: 0,
-        toolbarHeight: 64,
-        centerTitle: true,
-        leading: IconButton(
-          tooltip: 'Back to Home',
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: const Text(
-          'Notifications',
-          style: TextStyle(
-            color: _green,
-            fontSize: 23,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        actions: const [
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16),
-            child: Icon(Icons.notifications, color: _green),
-          ),
-        ],
-        bottom: const PreferredSize(
-          preferredSize: Size.fromHeight(1),
-          child: Divider(
-            height: 1,
-            thickness: 1,
-            color: Color(0xFFDDDDDD),
-          ),
-        ),
-      ),
-
       body: SafeArea(
-        top: false,
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 460),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const SizedBox(height: 16),
-                  Expanded(
-                    child: sorted.isEmpty
-                        ? const Center(
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  'No trip reminders yet',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w600,
-                                    color: _muted,
-                                  ),
-                                ),
-                                SizedBox(height: 6),
-                                Text(
-                                  'Your reminders will appear here once you '
-                                  'schedule a trip.',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: _muted,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          )
-                        : ListView(
-                            padding: const EdgeInsets.symmetric(vertical: 18),
-                            children: [
-                              for (var i = 0; i < sorted.length; i++) ...[
-                                if (i == 0 ||
-                                    !DateUtils.isSameDay(
-                                      sorted[i].createdAt,
-                                      sorted[i - 1].createdAt,
-                                    ))
-                                  Padding(
-                                    padding: const EdgeInsets.only(
-                                      top: 4,
-                                      bottom: 14,
-                                    ),
-                                    child: Text(
-                                      _sectionTitle(
-                                        context,
-                                        sorted[i].createdAt,
-                                      ),
-                                      style: const TextStyle(
-                                        fontSize: 19,
-                                        fontWeight: FontWeight.bold,
-                                        color: _green,
-                                      ),
-                                    ),
-                                  ),
-                                _buildReminderCard(context, sorted[i]),
-                                const SizedBox(height: 12),
-                              ],
-                              const SizedBox(height: 32),
-                              const Text(
-                                'You’re all caught up',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.w600,
-                                  color: _muted,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              const Text(
-                                'No more reminders to show.',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(color: _muted),
-                              ),
-                            ],
-                          ),
-                  ),
-                ],
+        child: CustomScrollView(
+          slivers: [
+            SliverAppBar(
+              backgroundColor: Colors.white,
+              surfaceTintColor: Colors.transparent,
+              foregroundColor: _green,
+              elevation: 0,
+              toolbarHeight: 64,
+              centerTitle: true,
+              leading: IconButton(
+                tooltip: 'Back to Home',
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+              title: const Text(
+                'Notifications',
+                style: TextStyle(
+                  color: _green,
+                  fontSize: 23,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              actions: const [
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: Icon(Icons.notifications, color: _green),
+                ),
+              ],
+              bottom: const PreferredSize(
+                preferredSize: Size.fromHeight(1),
+                child: Divider(
+                  height: 1,
+                  thickness: 1,
+                  color: Color(0xFFDDDDDD),
+                ),
               ),
             ),
-          ),
+            if (sorted.isEmpty)
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 460),
+                    child: const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 20),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'No trip reminders yet',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: _muted,
+                            ),
+                          ),
+                          SizedBox(height: 6),
+                          Text(
+                            'Trip reminders appear here on the day '
+                            'before each scheduled trip.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(fontSize: 14, color: _muted),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              )
+            else
+              SliverToBoxAdapter(
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 460),
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          for (var i = 0; i < sorted.length; i++) ...[
+                            if (i == 0 ||
+                                !DateUtils.isSameDay(
+                                  sorted[i].createdAt,
+                                  sorted[i - 1].createdAt,
+                                ))
+                              Padding(
+                                padding: const EdgeInsets.only(
+                                  top: 4,
+                                  bottom: 14,
+                                ),
+                                child: Text(
+                                  _sectionTitle(context, sorted[i].createdAt),
+                                  style: const TextStyle(
+                                    fontSize: 19,
+                                    fontWeight: FontWeight.bold,
+                                    color: _green,
+                                  ),
+                                ),
+                              ),
+                            _buildReminderCard(context, sorted[i]),
+                            const SizedBox(height: 12),
+                          ],
+                          const SizedBox(height: 32),
+                          const Text(
+                            'You’re all caught up',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.w600,
+                              color: _muted,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          const Text(
+                            'No more reminders to show.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(color: _muted),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
         ),
       ),
 
@@ -305,7 +302,7 @@ class NotificationScreen extends StatelessWidget {
         child: BottomNavigationBar(
           currentIndex: 2,
           onTap: (index) {
-            const routes = ['/', '/search', '/planner', '/profile'];
+            const routes = ['/home', '/search', '/planner', '/profile'];
             Navigator.of(context).pushReplacementNamed(routes[index]);
           },
           type: BottomNavigationBarType.fixed,

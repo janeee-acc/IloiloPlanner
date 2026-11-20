@@ -33,10 +33,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
       filled: true,
       fillColor: const Color(0xFFEDEDED),
       isDense: true,
-      contentPadding: const EdgeInsets.symmetric(
-        horizontal: 12,
-        vertical: 12,
-      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       border: border,
       enabledBorder: border,
       focusedBorder: border.copyWith(
@@ -232,13 +229,8 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
               left: 8,
               child: IconButton(
                 tooltip: 'Back to login',
-                icon: const Icon(
-                  Icons.arrow_back,
-                  color: Color(0xFF34883E),
-                ),
-                onPressed: _isSaving
-                    ? null
-                    : () => Navigator.of(context).pop(),
+                icon: const Icon(Icons.arrow_back, color: Color(0xFF34883E)),
+                onPressed: _isSaving ? null : () => Navigator.of(context).pop(),
               ),
             ),
           ],
