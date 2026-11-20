@@ -386,46 +386,63 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return RefreshIndicator(
       color: _green,
       onRefresh: _load,
-      child: ListView(
-        padding: EdgeInsets.zero,
-        children: [
-          Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 430),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Column(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.only(top: 16),
-                      child: _buildUserInfo(profile),
-                    ),
-                    Container(
-                      width: double.infinity,
-                      constraints: BoxConstraints(
-                        minHeight: MediaQuery.sizeOf(context).height * 0.5,
-                      ),
-                      margin: const EdgeInsets.only(top: 20),
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFF7F7F7),
-                        border: Border(
-                          top: BorderSide(color: Color(0xFFE5E5E5)),
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Color(0x10000000),
-                            blurRadius: 6,
-                            offset: Offset(0, -2),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        children: [_buildVisitedHeading(), _buildVisitedGrid()],
-                      ),
-                    ),
-                  ],
+      child: CustomScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        slivers: [
+          SliverToBoxAdapter(
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 430),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                  child: _buildUserInfo(profile),
                 ),
               ),
+            ),
+          ),
+          SliverFillRemaining(
+            hasScrollBody: false,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final minSectionHeight =
+                    constraints.maxHeight > 20
+                        ? constraints.maxHeight - 20
+                        : 0.0;
+                return Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 430),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Container(
+                        width: double.infinity,
+                        constraints: BoxConstraints(
+                          minHeight: minSectionHeight,
+                        ),
+                        margin: const EdgeInsets.only(top: 20),
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFF7F7F7),
+                          border: Border(
+                            top: BorderSide(color: Color(0xFFE5E5E5)),
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Color(0x10000000),
+                              blurRadius: 6,
+                              offset: Offset(0, -2),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          children: [
+                            _buildVisitedHeading(),
+                            _buildVisitedGrid(),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
           ),
         ],
