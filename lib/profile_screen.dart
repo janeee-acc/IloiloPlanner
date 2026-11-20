@@ -273,22 +273,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
       );
     }
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(14, 14, 14, 20),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: constraints.maxWidth < 360 ? 1 : 2,
-            mainAxisSpacing: 12,
-            crossAxisSpacing: 12,
-            mainAxisExtent: 160,
-          ),
-          itemCount: _visited.length,
-          itemBuilder: (context, index) => _buildVisitedCard(_visited[index]),
-        );
-      },
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      padding: const EdgeInsets.fromLTRB(14, 14, 14, 20),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        mainAxisSpacing: 12,
+        crossAxisSpacing: 12,
+        mainAxisExtent: 160,
+      ),
+      itemCount: _visited.length,
+      itemBuilder: (context, index) => _buildVisitedCard(_visited[index]),
     );
   }
 
@@ -402,47 +398,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           SliverFillRemaining(
             hasScrollBody: false,
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final minSectionHeight =
-                    constraints.maxHeight > 20
-                        ? constraints.maxHeight - 20
-                        : 0.0;
-                return Center(
+            child: Padding(
+              padding: const EdgeInsets.only(top: 20),
+              child: Container(
+                width: double.infinity,
+                decoration: const BoxDecoration(
+                  color: Color(0xFFF7F7F7),
+                  border: Border(top: BorderSide(color: Color(0xFFE5E5E5))),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Color(0x10000000),
+                      blurRadius: 6,
+                      offset: Offset(0, -2),
+                    ),
+                  ],
+                ),
+                child: Center(
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 430),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Container(
-                        width: double.infinity,
-                        constraints: BoxConstraints(
-                          minHeight: minSectionHeight,
-                        ),
-                        margin: const EdgeInsets.only(top: 20),
-                        decoration: const BoxDecoration(
-                          color: Color(0xFFF7F7F7),
-                          border: Border(
-                            top: BorderSide(color: Color(0xFFE5E5E5)),
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Color(0x10000000),
-                              blurRadius: 6,
-                              offset: Offset(0, -2),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          children: [
-                            _buildVisitedHeading(),
-                            _buildVisitedGrid(),
-                          ],
-                        ),
-                      ),
+                    child: Column(
+                      children: [_buildVisitedHeading(), _buildVisitedGrid()],
                     ),
                   ),
-                );
-              },
+                ),
+              ),
             ),
           ),
         ],
