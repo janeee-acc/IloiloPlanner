@@ -270,18 +270,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
       );
     }
 
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(14, 14, 14, 20),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        mainAxisSpacing: 12,
-        crossAxisSpacing: 12,
-        mainAxisExtent: 160,
-      ),
-      itemCount: _visited.length,
-      itemBuilder: (context, index) => _buildVisitedCard(_visited[index]),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(14, 14, 14, 20),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: constraints.maxWidth < 360 ? 1 : 2,
+            mainAxisSpacing: 12,
+            crossAxisSpacing: 12,
+            mainAxisExtent: 160,
+          ),
+          itemCount: _visited.length,
+          itemBuilder: (context, index) => _buildVisitedCard(_visited[index]),
+        );
+      },
     );
   }
 
@@ -385,31 +389,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 430),
-              child: Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.only(top: 16),
-                    child: _buildUserInfo(profile),
-                  ),
-                  Container(
-                    width: double.infinity,
-                    margin: const EdgeInsets.only(top: 20),
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFF7F7F7),
-                      border: Border(top: BorderSide(color: Color(0xFFE5E5E5))),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Color(0x10000000),
-                          blurRadius: 6,
-                          offset: Offset(0, -2),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(top: 16),
+                      child: _buildUserInfo(profile),
+                    ),
+                    Container(
+                      width: double.infinity,
+                      margin: const EdgeInsets.only(top: 20),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFF7F7F7),
+                        border: Border(
+                          top: BorderSide(color: Color(0xFFE5E5E5)),
                         ),
-                      ],
+                        boxShadow: [
+                          BoxShadow(
+                            color: Color(0x10000000),
+                            blurRadius: 6,
+                            offset: Offset(0, -2),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        children: [_buildVisitedHeading(), _buildVisitedGrid()],
+                      ),
                     ),
-                    child: Column(
-                      children: [_buildVisitedHeading(), _buildVisitedGrid()],
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
